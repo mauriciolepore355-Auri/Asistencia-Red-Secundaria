@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AsistenciaRed Secundaria — Prototipo</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:#eef2f7;color:#1a202c}
+/* LOGIN */
+#login{position:fixed;inset:0;background:linear-gradient(160deg,#1a365d,#0d2240);display:flex;align-items:center;justify-content:center;padding:22px;z-index:500}
+#login.off{display:none}
+.lbox{background:#fff;border-radius:20px;padding:34px 30px;width:100%;max-width:420px;box-shadow:0 24px 64px rgba(0,0,0,.35)}
+.llogo{text-align:center;margin-bottom:22px}.llogo .i{font-size:46px}.llogo h1{font-size:23px;font-weight:800;color:#1a365d;margin-top:6px}.llogo h1 span{color:#f6ad55}.llogo p{font-size:12px;color:#718096;margin-top:4px}
+.step{display:none}.step.on{display:block}
+.roles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.rb{padding:15px 10px;border:2px solid #e2e8f0;border-radius:12px;background:#fff;cursor:pointer;text-align:center}
+.rb:hover{border-color:#3182ce;background:#ebf8ff}.rb.sel{border-color:#1a365d;background:#ebf4ff}
+.rb .ic{font-size:26px;display:block;margin-bottom:5px}.rb .nm{font-size:12px;font-weight:700;color:#2d3748}.rb .ds{font-size:10px;color:#718096}
+.err{background:#fff5f5;border:1px solid #fed7d7;border-radius:8px;padding:9px 13px;font-size:13px;color:#c53030;margin-bottom:12px;display:none}.err.on{display:block}
+.back{text-align:center;margin-top:12px}.back a{font-size:13px;color:#3182ce;cursor:pointer}
+.code-show{background:#ebf4ff;border:1px solid #bee3f8;border-radius:10px;padding:12px 14px;margin:8px 0;font-size:13px}
+.code-show b{font-family:monospace;letter-spacing:1px;color:#1a365d}
+/* APP */
+#app{display:none}#app.on{display:block}
+#hdr{background:#1a365d;color:#fff;padding:13px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+#hdr h1{font-size:16px;font-weight:800}#hdr h1 span{color:#f6ad55}#hdr .sub{font-size:11px;opacity:.6}
+#hdr .right{display:flex;align-items:center;gap:9px}
+.rbadge{background:rgba(246,173,85,.2);border:1px solid rgba(246,173,85,.4);color:#f6ad55;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.lout{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:12px;padding:5px 11px;border-radius:8px;cursor:pointer}
+main{max-width:1000px;margin:0 auto;padding:18px;width:100%}
+.card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:16px}
+.card h2{font-size:15px;font-weight:700;color:#2d3748;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.lbl{font-size:11px;font-weight:700;color:#4a5568;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px}
+.inp{width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:14px;outline:none;margin-bottom:12px;background:#fff}
+.inp:focus{border-color:#3182ce;box-shadow:0 0 0 3px rgba(49,130,206,.1)}
+.inp-code{text-align:center;letter-spacing:3px;font-weight:700;text-transform:uppercase}
+select.inp{appearance:auto}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:130px}
+.btn{padding:10px 16px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer}
+.btn-primary{width:100%;background:#1a365d;color:#fff;padding:13px}.btn-primary:hover{background:#2a4a7f}
+.btn-blue{background:#3182ce;color:#fff}.btn-blue:hover{background:#2b6cb0}
+.btn-green{background:#276749;color:#fff}.btn-green:hover{background:#22543d}
+.btn-red{background:#fff5f5;color:#c53030;border:1px solid #fed7d7}.btn-red:hover{background:#fed7d7}
+.btn-gray{background:#edf2f7;color:#4a5568}.btn-gray:hover{background:#e2e8f0}
+.tabs{display:flex;gap:4px;background:#fff;border-radius:12px;padding:6px;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:16px;overflow-x:auto}
+.tab{flex:1;padding:9px 14px;border:none;border-radius:8px;background:transparent;font-size:13px;font-weight:600;color:#718096;cursor:pointer;white-space:nowrap}
+.tab.act{background:#1a365d;color:#fff}.tab:hover:not(.act){background:#edf2f7}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#2d3748;color:#fff;padding:9px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+td{padding:9px 12px;border-bottom:1px solid #edf2f7}tr:hover td{background:#f7fafc}.table-wrap{overflow-x:auto}
+.pill{display:inline-block;background:#edf2f7;border-radius:6px;padding:2px 8px;font-size:11px;color:#4a5568;margin-left:6px}
+.empty{text-align:center;padding:36px 18px;color:#a0aec0}.empty .e{font-size:38px;margin-bottom:8px}
+.day-nav{display:flex;align-items:center;gap:12px;background:#fff;border-radius:12px;padding:10px 14px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.day-nav button.nav{background:#edf2f7;border:none;border-radius:8px;width:34px;height:34px;font-size:17px;cursor:pointer}
+.day-nav .c{flex:1;text-align:center}.day-nav .d{font-size:15px;font-weight:700}.day-nav .w{font-size:12px;color:#718096}
+.day-nav .hoy{background:#ebf8ff;color:#2b6cb0;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer}
+.att-row{display:flex;align-items:center;background:#fff;padding:9px 14px;border-bottom:1px solid #edf2f7;gap:10px;flex-wrap:wrap}
+.att-row:first-child{border-radius:12px 12px 0 0}.att-row:last-child{border-radius:0 0 12px 12px;border-bottom:none}
+.att-name{flex:1;min-width:130px;font-size:13px}.att-name .ap{font-weight:700}
+.tog{width:52px;height:36px;border-radius:8px;border:none;font-weight:800;font-size:14px;cursor:pointer}
+.togE{background:#edf2f7;color:#cbd5e0}.togP{background:#c6f6d5;color:#276749}.togT{background:#fefcbf;color:#744210}
+.togA{background:#fed7d7;color:#9b2c2c}.togAJ{background:#bee3f8;color:#2c5282}
+.just{background:#bee3f8;color:#2c5282;border:none;border-radius:5px;padding:3px 9px;font-size:10px;font-weight:700;cursor:pointer}.just.off{background:#edf2f7;color:#a0aec0}
+.obs{flex-basis:100%;border:1px solid #e2e8f0;border-radius:6px;padding:5px 8px;font-size:11px;color:#4a5568;margin-top:4px;outline:none}
+.ctr{display:flex;gap:10px;background:#1e4080;border-radius:12px;padding:11px;margin-bottom:12px}
+.ctr .i{flex:1;text-align:center}.ctr .v{font-size:20px;font-weight:800;color:#fff}.ctr .l{font-size:10px;color:rgba(255,255,255,.55);text-transform:uppercase}
+.vg{color:#68d391!important}.vr{color:#fc8181!important}.vy{color:#f6e05e!important}.vb{color:#90cdf4!important}
+.reg-chip{display:inline-flex;align-items:center;gap:6px;border-radius:20px;padding:6px 13px;font-size:12px;font-weight:600;margin:0 6px 6px 0;cursor:pointer;border:1px solid #bee3f8;background:#ebf4ff;color:#1a365d}
+.reg-chip.act{background:#1a365d;color:#fff;border-color:#1a365d}
+.note{font-size:11px;color:#a0aec0;margin-top:6px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:#f7fafc;border-radius:10px;padding:12px;text-align:center}.stat .v{font-size:22px;font-weight:800}.stat .l{font-size:10px;color:#718096;text-transform:uppercase;margin-top:2px}
+.chk{display:inline-flex;align-items:center;gap:6px;background:#f7fafc;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:13px;margin:0 6px 6px 0;cursor:pointer}
+.demo-banner{background:#fffaf0;border:1px solid #f6ad55;border-radius:10px;padding:9px 13px;font-size:12px;color:#744210;margin-bottom:14px}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:#2d3748;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:99;transition:transform .3s}
+#toast.show{transform:translateX(-50%) translateY(0)}
+@media(max-width:600px){main{padding:12px}.stat-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="login">
+ <div class="lbox">
+  <div class="llogo"><div class="i">📋</div><h1>Asistencia<span>Red</span></h1><p>Secundaria — Provincia de Buenos Aires</p></div>
+
+  <div class="step on" id="s-inst">
+   <div class="err" id="e-inst"></div>
+   <label class="lbl">Código de institución</label>
+   <input class="inp inp-code" id="i-inst" placeholder="INST-XXXX" autocomplete="off">
+   <button class="btn-primary" onclick="checkInst()">Continuar →</button>
+   <div class="back"><a onclick="goStep('reg')">¿Sos administrador? Registrá tu institución</a></div>
+  </div>
+
+  <div class="step" id="s-rol">
+   <p id="inst-lbl" style="font-size:13px;color:#718096;margin-bottom:12px"></p>
+   <div class="err" id="e-rol"></div>
+   <label class="lbl">¿Con qué rol ingresás?</label>
+   <div class="roles">
+    <button class="rb" onclick="selRol('docente',this)"><span class="ic">👨‍🏫</span><span class="nm">Docente</span><span class="ds">Sus cursos</span></button>
+    <button class="rb" onclick="selRol('preceptor',this)"><span class="ic">📋</span><span class="nm">Preceptor</span><span class="ds">Todos los cursos</span></button>
+    <button class="rb" onclick="selRol('directivo',this)"><span class="ic">🏫</span><span class="nm">Directivo</span><span class="ds">Estadísticas</span></button>
+    <button class="rb" onclick="selRol('admin',this)"><span class="ic">⚙️</span><span class="nm">Admin</span><span class="ds">Configuración</span></button>
+   </div>
+   <button class="btn-primary" onclick="checkRol()">Continuar →</button>
+   <div class="back"><a onclick="goStep('inst')">← Volver</a></div>
+  </div>
+
+  <div class="step" id="s-code">
+   <div class="err" id="e-code"></div>
+   <label class="lbl" id="code-lbl">Código de acceso</label>
+   <input class="inp inp-code" id="i-code" placeholder="••••••" autocomplete="off">
+   <button class="btn-primary" onclick="checkCode()">Ingresar →</button>
+   <div class="back"><a onclick="goStep('rol')">← Volver</a></div>
+  </div>
+
+  <div class="step" id="s-reg">
+   <h2 style="font-size:15px;color:#2d3748;margin-bottom:12px">⚙️ Registrar institución</h2>
+   <div class="err" id="e-reg"></div>
+   <label class="lbl">Nombre de la institución</label>
+   <input class="inp" id="r-nombre" placeholder="Ej: EES N°5 / EEST N°1">
+   <label class="lbl">Ciclo lectivo</label>
+   <input class="inp" id="r-ciclo" placeholder="2026">
+   <label class="lbl">Contraseña de administrador</label>
+   <input class="inp" id="r-pass" type="password" placeholder="Mínimo 6 caracteres">
+   <button class="btn-primary" onclick="registrarInst()">Crear institución</button>
+   <div class="back"><a onclick="goStep('inst')">← Volver</a></div>
+  </div>
+ </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app">
+ <header id="hdr">
+  <div><h1>📋 Asistencia<span>Red</span></h1><div class="sub" id="hdr-inst">—</div></div>
+  <div class="right"><span class="rbadge" id="hdr-rol">—</span><button class="lout" onclick="logout()">Salir</button></div>
+ </header>
+ <main>
+  <div class="demo-banner">☁️ <strong>Conectado a la nube.</strong> Los datos se guardan en Firebase y se sincronizan en tiempo real entre todos los usuarios de la institución.</div>
+  <div id="tabsbar"></div>
+  <div id="view"></div>
+ </main>
+</div>
+<div id="toast">✓</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+/* ====================== DATOS CURRICULARES PBA ====================== */
+const MATERIAS_PBA={
+ comun:{
+  cicloBasico:{
+   "1":["Prácticas del Lenguaje","Matemática","Ciencias Naturales","Ciencias Sociales","Inglés","Educación Física","Educación Artística","Construcción de la Ciudadanía"],
+   "2":["Prácticas del Lenguaje","Matemática","Ciencias Naturales","Ciencias Sociales","Inglés","Educación Física","Educación Artística","Construcción de la Ciudadanía"],
+   "3":["Prácticas del Lenguaje","Matemática","Biología","Físico-Química","Geografía","Historia","Inglés","Educación Física","Educación Artística","Construcción de la Ciudadanía"]
+  },
+  cicloSuperior:{
+   comunes:{
+    "4":["Literatura","Matemática — Ciclo Superior","Inglés","Educación Física","Historia","Geografía","Biología","Introducción a la Física","NTICX","Salud y Adolescencia"],
+    "5":["Literatura","Matemática — Ciclo Superior","Inglés","Educación Física","Historia","Geografía","Política y Ciudadanía"],
+    "6":["Literatura","Inglés","Educación Física","Filosofía","Trabajo y Ciudadanía"]
+   },
+   orientaciones:{
+    "Ciencias Naturales":{"4":["Introducción a la Química"],"5":["Fundamentos de la Química","Física","Biología","Ciencias de la Tierra"],"6":["Química del Carbono","Biología, Genética y Sociedad","Física Clásica y Moderna","Ambiente, Desarrollo y Sociedad"]},
+    "Ciencias Sociales":{"4":["Psicología"],"5":["Comunicación, Cultura y Sociedad","Economía Política","Sociología"],"6":["Historia","Geografía","Proyecto de Investigación en Ciencias Sociales"]},
+    "Economía y Administración":{"4":["Sistemas de Información Contable","Teoría de las Organizaciones"],"5":["Elementos de Micro y Macroeconomía","Sistemas de Información Contable","Gestión Organizacional"],"6":["Economía Política","Proyectos Organizacionales"]},
+    "Comunicación":{"4":["Psicología","Introducción a la Comunicación"],"5":["Comunicación y Culturas del Consumo","Observatorio de Comunicación, Cultura y Sociedad","Observatorio de Medios"],"6":["Taller de Comunicación Institucional y Comunitaria","Taller de Producción en Lenguajes","Comunicación y Transformaciones Socioculturales del Siglo XXI"]},
+    "Lenguas Extranjeras":{"4":["Portugués I","Francés I","Italiano I"],"5":["Estudios Interculturales en Inglés I","Portugués II","Francés II","Italiano II"],"6":["Estudios Interculturales en Inglés II","Portugués III"]},
+    "Educación Física":{"4":["Educación Física y Corporeidad","Psicología","Prácticas Deportivas y Atléticas"],"5":["Educación Física y Cultura","Prácticas Deportivas y Acuáticas","Prácticas Corporales y Deportivas en el Ambiente Natural","Sociología","Prácticas Gimnásticas y Expresivas I"],"6":["Educación Física y Comunidad","Prácticas Deportivas y Juegos","Prácticas Gimnásticas y Expresivas II"]},
+    "Arte — Artes Visuales":{"4":["Producción y Análisis de la Imagen"],"5":["Lenguaje Complementario","Imagen y Nuevos Medios","Imagen y Procedimientos Constructivos"],"6":["Historia","Lenguaje Complementario","Proyecto de Producción en Artes Visuales"]},
+    "Arte — Danza":{"4":["Lenguaje de la Danza"],"5":["Lenguaje Complementario","Análisis Coreográfico","Improvisación y Composición Coreográfica"],"6":["Historia","Lenguaje Complementario","Proyecto de Producción en Danza"]},
+    "Arte — Literatura":{"4":["Taller de Lectura Literaria y Escritura"],"5":["Lenguaje Complementario","Seminario de Investigación Literaria","Taller de Escritura"],"6":["Historia","Lenguaje Complementario","Proyecto de Producción Literaria"]},
+    "Arte — Música":{"4":["Lenguaje Musical"],"5":["Lenguaje Complementario","Análisis y Producción en Música","Práctica de Conjuntos Vocales e Instrumentales"],"6":["Historia","Lenguaje Complementario","Proyecto de Producción en Música"]},
+    "Arte — Teatro":{"4":["Actuación"],"5":["Lenguaje Complementario","Análisis del Lenguaje Teatral","Actuación y Procedimientos Constructivos en Teatro"],"6":["Historia","Lenguaje Complementario","Proyecto de Producción en Teatro"]}
+   }
+  }
+ },
+ tecnica:{
+  cicloBasico:{
+   "1":["Prácticas del Lenguaje","Matemática","Ciencias Naturales","Ciencias Sociales","Inglés","Educación Física","Educación Artística","Construcción de la Ciudadanía","Lenguajes Tecnológicos","Sistemas Tecnológicos","Procedimientos Técnicos","Informática"],
+   "2":["Prácticas del Lenguaje","Matemática","Ciencias Naturales","Ciencias Sociales","Inglés","Educación Física","Educación Artística","Construcción de la Ciudadanía","Lenguajes Tecnológicos","Sistemas Tecnológicos","Procedimientos Técnicos","Informática"],
+   "3":["Prácticas del Lenguaje","Matemática","Biología","Físico-Química","Geografía","Historia","Inglés","Educación Física","Educación Artística","Construcción de la Ciudadanía","Lenguajes Tecnológicos","Sistemas Tecnológicos","Procedimientos Técnicos","Proyecto Tecnológico","Informática"]
+  },
+  formacionGeneral:["Literatura","Inglés","Educación Física","Historia","Geografía","Arte","Filosofía","Política y Ciudadanía","Salud y Adolescencia"],
+  cientificoTecnologica:["Matemática","Física","Química","Derecho del Trabajo","Emprendimientos Productivos y Desarrollo Local","Módulos TIC"],
+  especialidades:{
+   "Electromecánica":["Taller","Dibujo Tecnológico","Tecnología de los Materiales","Electrotecnia","Mecánica y Mecanismos","Resistencia de Materiales","Máquinas Eléctricas","Sistemas Mecánicos","Instalaciones Eléctricas","Mantenimiento y Reparación de Equipos e Instalaciones","Prácticas Profesionalizantes"],
+   "Electrónica":["Taller","Dibujo Tecnológico","Sistemas Digitales","Análisis de Circuitos Eléctricos","Electrónica Analógica","Electrónica Digital","Sistemas de Comunicaciones","Sistemas de Control","Microcontroladores","Prácticas Profesionalizantes"],
+   "Informática Personal y Profesional":["Taller","Sistemas de Computación","Programación","Redes de Datos","Bases de Datos","Hardware y Mantenimiento","Diseño de Sistemas","Soporte Técnico","Prácticas Profesionalizantes"],
+   "Maestro Mayor de Obras":["Taller","Dibujo Técnico y Computarizado","Tecnología de los Materiales","Estructuras","Construcciones","Instalaciones","Topografía","Proyecto y Diseño","Cómputos y Presupuestos","Prácticas Profesionalizantes"],
+   "Químico":["Taller / Laboratorio","Química General e Inorgánica","Química Orgánica","Química Analítica","Fisicoquímica","Microbiología","Análisis Industriales","Operaciones Unitarias","Seguridad e Higiene","Prácticas Profesionalizantes"],
+   "Tecnología de los Alimentos":["Taller / Laboratorio","Química de los Alimentos","Microbiología de los Alimentos","Análisis de Alimentos","Procesos y Operaciones","Conservación de Alimentos","Bromatología","Seguridad e Higiene","Prácticas Profesionalizantes"],
+   "Administración de las Organizaciones":["Sistemas de Información Contable","Administración","Economía","Derecho","Gestión de las Organizaciones","Comercialización","Recursos Humanos","Subsistema Administrativo Contable","Prácticas Profesionalizantes"],
+   "Automotores":["Taller","Dibujo Tecnológico","Tecnología de los Materiales","Motores","Sistemas de Transmisión","Sistemas Eléctricos del Automotor","Electrónica del Automotor","Mantenimiento y Reparación","Prácticas Profesionalizantes"],
+   "Aeronáutica":["Taller","Dibujo Tecnológico","Aerodinámica","Estructuras de Aeronaves","Motores de Aeronaves","Sistemas de Aeronaves","Mantenimiento Aeronáutico","Prácticas Profesionalizantes"],
+   "Aviónica":["Taller","Sistemas Digitales","Electrónica Aplicada","Instrumental de Aeronaves","Sistemas de Navegación y Comunicación","Mantenimiento de Sistemas Aviónicos","Prácticas Profesionalizantes"],
+   "Servicios Turísticos":["Servicios Turísticos","Geografía Turística","Patrimonio Turístico","Agencias de Viajes","Hotelería","Inglés Técnico","Gestión de Servicios Turísticos","Prácticas Profesionalizantes"],
+   "Multimedios":["Taller","Diseño Multimedial","Producción Gráfica","Producción Audiovisual","Animación","Programación Multimedial","Sonido","Prácticas Profesionalizantes"],
+   "Construcciones Navales":["Taller","Dibujo Tecnológico","Tecnología de los Materiales","Arquitectura Naval","Estructuras Navales","Sistemas de Propulsión","Construcción de Embarcaciones","Prácticas Profesionalizantes"]
+  }
+ }
+};
+const OTRA="✎ Otra materia / módulo…";
+const DIAS=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+const HORAS=["1ª hora","2ª hora","3ª hora","4ª hora","5ª hora","6ª hora","7ª hora","8ª hora","Contraturno / Taller"];
+const TURNOS=["Mañana","Tarde","Vespertino"];
+const PERIODOS=["1° cuatrimestre (mayo)","2° cuatrimestre (octubre)"];
+const TRAY={TEA:{n:'Avanzada',c:'#276749',bg:'#c6f6d5'},TEP:{n:'En proceso',c:'#744210',bg:'#fefcbf'},TED:{n:'Discontinua',c:'#9b2c2c',bg:'#fed7d7'}};
+let filtroTurno='';
+function aplicarTurno(list){return filtroTurno?list.filter(([id,c])=>c.turno===filtroTurno):list}
+function turnoFilterUI(){return `<div class="card" style="padding:11px 14px;margin-bottom:12px"><div class="row" style="align-items:center"><label class="lbl" style="margin:0 8px 0 0;flex:0 0 auto">🕐 Turno</label><select class="inp" style="margin-bottom:0" onchange="filtroTurno=this.value;render()"><option value="">Todos los turnos</option>${TURNOS.map(t=>`<option ${t===filtroTurno?'selected':''}>${t}</option>`).join('')}</select></div></div>`}
+
+/* ====================== ESTADO / PERSISTENCIA ====================== */
+let DB=seed();
+let SESSION=cargarSesion();
+let curCurso=null,curDate=hoyStr(),curReg=null,resCurso=null,resMateria=null;
+let trayCurso=null,trayMateria='',trayPeriodo='';
+let _loginRol=null,_loginOk=false;
+
+// ── FIREBASE: reusa el proyecto de especiales; los datos de secundaria viven en la rama 'secundaria' ──
+const firebaseConfig={apiKey:"AIzaSyDr81gThqdqostywNhBoYJ94GPW6cBeLAA",authDomain:"asistencia-institucional-a7f19.firebaseapp.com",databaseURL:"https://asistencia-institucional-a7f19-default-rtdb.firebaseio.com",projectId:"asistencia-institucional-a7f19",storageBucket:"asistencia-institucional-a7f19.firebasestorage.app",messagingSenderId:"691319267002",appId:"1:691319267002:web:d513883343079200f02c83"};
+let RT=null;
+try{firebase.initializeApp(firebaseConfig);RT=firebase.database();}catch(e){console.error('Firebase init',e)}
+const ROOT='secundaria';
+function dref(p){return RT.ref(ROOT+(p?'/'+p:''))}
+function seed(){return {inst:null,docentes:{},cursos:{},asistencia:{}}}
+function normalize(d){
+ if(!d||typeof d!=='object')d={};
+ d.inst=d.inst||null;d.docentes=d.docentes||{};d.cursos=d.cursos||{};d.asistencia=d.asistencia||{};
+ Object.values(d.cursos).forEach(c=>{c.docentes=Array.isArray(c.docentes)?c.docentes:[];c.alumnos=c.alumnos||{};c.turno=c.turno||'';c.intensifica=c.intensifica||{};c.trayectorias=c.trayectorias||{}});
+ Object.values(d.asistencia).forEach(days=>Object.values(days).forEach(day=>Object.values(day).forEach(r=>{r.est=r.est||{};r.just=r.just||{};r.obs=r.obs||{}})));
+ return d;
+}
+// Guardado puntual (evita pisar cambios de otros usuarios)
+function guardar(){if(!RT)return;dref('inst').set(DB.inst||null);dref('docentes').set(DB.docentes||{});dref('cursos').set(DB.cursos||{})}
+function wCurso(cid){if(!RT)return;dref('cursos/'+cid).set(DB.cursos[cid]||null)}
+function wReg(cid,fecha,rid){if(!RT)return;const r=((DB.asistencia[cid]||{})[fecha]||{})[rid]||null;dref('asistencia/'+cid+'/'+fecha+'/'+rid).set(r)}
+function rmReg(cid,fecha,rid){if(!RT)return;dref('asistencia/'+cid+'/'+fecha+'/'+rid).remove()}
+function rmCursoAsist(cid){if(!RT)return;dref('asistencia/'+cid).remove()}
+function cargarSesion(){try{return JSON.parse(localStorage.getItem('AR_SEC_SESS'))||null}catch(e){return null}}
+function guardarSesion(){localStorage.setItem('AR_SEC_SESS',JSON.stringify(SESSION))}
+function uid(p){return p+Math.random().toString(36).slice(2,8)}
+function genCode(p){return p+'-'+Math.random().toString(36).slice(2,6).toUpperCase()}
+function pad(n){return String(n).padStart(2,'0')}
+function hoyStr(){const n=new Date();return n.getFullYear()+'-'+pad(n.getMonth()+1)+'-'+pad(n.getDate())}
+const MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DOW=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+function fmtFecha(d){const[y,m,dd]=d.split('-');return (+dd)+' de '+MES[+m-1]+' '+y}
+function fmtDow(d){const[y,m,dd]=d.split('-');return DOW[new Date(+y,+m-1,+dd).getDay()]}
+function diaSemana(d){const[y,m,dd]=d.split('-');return DIAS[(new Date(+y,+m-1,+dd).getDay()+6)%7]} // Lun..Dom→índice DIAS
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}
+const $=id=>document.getElementById(id);
+
+/* ====================== LOGIN ====================== */
+function goStep(s){document.querySelectorAll('.step').forEach(x=>x.classList.remove('on'));$('s-'+s).classList.add('on')}
+function showErr(id,m){const e=$('e-'+id);e.textContent=m;e.classList.add('on')}
+function clrErr(id){$('e-'+id).classList.remove('on')}
+function selRol(r,btn){_loginRol=r;document.querySelectorAll('.rb').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel')}
+
+function checkInst(){
+ clrErr('inst');
+ const code=$('i-inst').value.trim().toUpperCase();
+ if(!code){showErr('inst','Ingresá el código.');return}
+ if(!DB.inst){showErr('inst','No hay ninguna institución registrada. Tocá "Registrá tu institución".');return}
+ if(code!==DB.inst.code){showErr('inst','Código no encontrado.');return}
+ $('inst-lbl').textContent='🏫 '+DB.inst.nombre+' · Ciclo '+DB.inst.ciclo;
+ goStep('rol');
+}
+function checkRol(){
+ clrErr('rol');
+ if(!_loginRol){showErr('rol','Elegí un rol.');return}
+ const lbls={docente:'Código del docente',preceptor:'Código de preceptoría',directivo:'Código de dirección',admin:'Contraseña de administrador'};
+ $('code-lbl').textContent=lbls[_loginRol];$('i-code').value='';goStep('code');
+}
+function checkCode(){
+ clrErr('code');
+ const code=$('i-code').value.trim().toUpperCase();
+ if(!code){showErr('code','Ingresá el código.');return}
+ if(_loginRol==='admin'){if(code!==DB.inst.adminPass.toUpperCase()){showErr('code','Contraseña incorrecta.');return}entrar({rol:'admin'})}
+ else if(_loginRol==='preceptor'){if(code!==DB.inst.codes.preceptor.toUpperCase()){showErr('code','Código incorrecto.');return}entrar({rol:'preceptor'})}
+ else if(_loginRol==='directivo'){if(code!==DB.inst.codes.directivo.toUpperCase()){showErr('code','Código incorrecto.');return}entrar({rol:'directivo'})}
+ else{ // docente
+  let found=null;for(const[id,d]of Object.entries(DB.docentes)){if(d.codigo.toUpperCase()===code){found={id,...d};break}}
+  if(!found){showErr('code','Código incorrecto.');return}
+  entrar({rol:'docente',docId:found.id,docNombre:found.nombre});
+ }
+}
+function registrarInst(){
+ clrErr('reg');
+ const nombre=$('r-nombre').value.trim(),ciclo=$('r-ciclo').value.trim(),pass=$('r-pass').value.trim();
+ if(!nombre||!ciclo||!pass){showErr('reg','Completá todos los campos.');return}
+ if(pass.length<6){showErr('reg','La contraseña debe tener 6 caracteres o más.');return}
+ DB.inst={nombre,ciclo,adminPass:pass,code:genCode('INST'),codes:{preceptor:genCode('PREC'),directivo:genCode('DIR')}};
+ guardar();
+ alert('Institución creada.\n\nCódigo de institución: '+DB.inst.code+'\n\nGuardá este código: lo necesitan todos para ingresar.');
+ entrar({rol:'admin'});
+}
+function entrar(sess){SESSION=sess;guardarSesion();mostrarApp()}
+function logout(){if(!confirm('¿Cerrar sesión?'))return;SESSION=null;localStorage.removeItem('AR_SEC_SESS');location.reload()}
+
+function mostrarApp(){
+ $('login').classList.add('off');$('app').classList.add('on');
+ $('hdr-inst').textContent=DB.inst.nombre+' · Ciclo '+DB.inst.ciclo;
+ const rl={docente:'👨‍🏫 Docente',preceptor:'📋 Preceptor',directivo:'🏫 Directivo',admin:'⚙️ Admin'};
+ $('hdr-rol').textContent=SESSION.rol==='docente'?(rl.docente+' · '+SESSION.docNombre):rl[SESSION.rol];
+ buildTabs();render();
+}
+
+/* ====================== TABS POR ROL ====================== */
+let tab='';
+function tabsForRole(){
+ if(SESSION.rol==='admin')return[['gestion','🏫 Gestión'],['asist','📋 Asistencia'],['tray','🧭 Trayectorias'],['resumen','📊 Resumen'],['config','⚙️ Config']];
+ if(SESSION.rol==='preceptor')return[['asist','📋 Asistencia'],['tray','🧭 Trayectorias'],['resumen','📊 Resumen']];
+ if(SESSION.rol==='directivo')return[['tray','🧭 Trayectorias'],['resumen','📊 Estadísticas']];
+ return[['asist','📋 Asistencia'],['tray','🧭 Trayectorias'],['resumen','📊 Resumen']]; // docente
+}
+function buildTabs(){
+ const ts=tabsForRole();if(!ts.find(t=>t[0]===tab))tab=ts[0][0];
+ $('tabsbar').innerHTML=`<div class="tabs">${ts.map(([k,l])=>`<button class="tab${k===tab?' act':''}" onclick="setTab('${k}')">${l}</button>`).join('')}</div>`;
+}
+function setTab(t){tab=t;buildTabs();render()}
+function render(){
+ if(tab==='gestion')renderGestion();
+ else if(tab==='asist')renderAsist();
+ else if(tab==='tray')renderTrayectorias();
+ else if(tab==='resumen')renderResumen();
+ else if(tab==='config')renderConfig();
+}
+
+/* ====================== MATERIAS DISPONIBLES ====================== */
+function materiasDeCurso(c){
+ let out=[];
+ if(c.tipo==='comun'){
+  if(+c.anio<=3)out=(MATERIAS_PBA.comun.cicloBasico[c.anio]||[]).slice();
+  else{out=(MATERIAS_PBA.comun.cicloSuperior.comunes[c.anio]||[]).slice();const o=MATERIAS_PBA.comun.cicloSuperior.orientaciones[c.orient];if(o&&o[c.anio])out=out.concat(o[c.anio])}
+ }else{
+  if(+c.anio<=3)out=(MATERIAS_PBA.tecnica.cicloBasico[c.anio]||[]).slice();
+  else{out=MATERIAS_PBA.tecnica.formacionGeneral.concat(MATERIAS_PBA.tecnica.cientificoTecnologica);const e=MATERIAS_PBA.tecnica.especialidades[c.orient];if(e)out=out.concat(e)}
+ }
+ return out;
+}
+function cursosDeSesion(){
+ const all=Object.entries(DB.cursos);
+ if(SESSION.rol==='docente')return all.filter(([id,c])=>(c.docentes||[]).includes(SESSION.docId));
+ return all;
+}
+function alumnosOrdenados(c){
+ return Object.entries(c.alumnos||{}).map(([id,a])=>({id,...a}))
+  .sort((x,y)=>(x.apellido+' '+x.nombre).localeCompare(y.apellido+' '+y.nombre,'es',{sensitivity:'base'}));
+}
+
+/* ====================== VISTA GESTIÓN (admin) ====================== */
+function renderGestion(){
+ let h=`<div class="card"><h2>➕ Nuevo curso</h2>
+  <div class="row">
+   <div><label class="lbl">Nombre (ej: 3°A)</label><input class="inp" id="c-nombre" placeholder="3°A"></div>
+   <div><label class="lbl">Turno</label><select class="inp" id="c-turno">${TURNOS.map(t=>`<option>${t}</option>`).join('')}</select></div>
+   <div><label class="lbl">Tipo</label><select class="inp" id="c-tipo" onchange="onTipoCurso()"><option value="comun">Común</option><option value="tecnica">Técnica</option></select></div>
+   <div><label class="lbl">Año</label><select class="inp" id="c-anio" onchange="onAnioCurso()"></select></div>
+   <div id="c-orient-wrap" style="display:none"><label class="lbl" id="c-orient-lbl">Orientación</label><select class="inp" id="c-orient"></select></div>
+  </div>
+  <button class="btn btn-blue" onclick="crearCurso()">Crear curso</button></div>`;
+
+ // Docentes
+ h+=`<div class="card"><h2>👨‍🏫 Docentes</h2>
+  <div class="row" style="margin-bottom:6px">
+   <input class="inp" id="d-nombre" placeholder="Apellido, Nombre" style="margin-bottom:0;flex:2" onkeydown="if(event.key==='Enter')addDocente()">
+   <input class="inp" id="d-codigo" placeholder="Código (opcional, ej: DNI)" style="margin-bottom:0" onkeydown="if(event.key==='Enter')addDocente()">
+   <button class="btn btn-green" style="flex:0 0 auto" onclick="addDocente()">+ Docente</button></div>
+  <p class="note" style="margin-bottom:10px">Si dejás el código vacío se genera uno automático.</p>`;
+ const ds=Object.entries(DB.docentes);
+ if(ds.length){h+=`<div class="table-wrap"><table><tr><th>Docente</th><th>Código</th><th></th></tr>`;
+  ds.forEach(([id,d])=>{h+=`<tr><td>${esc(d.nombre)}</td><td><b style="font-family:monospace">${esc(d.codigo)}</b></td><td style="text-align:right"><button class="btn btn-gray" style="padding:4px 9px" onclick="editDocCodigo('${id}')">✎ Código</button> <button class="btn btn-gray" style="padding:4px 9px" onclick="delDocente('${id}')">✕</button></td></tr>`});
+  h+=`</table></div>`}else{h+=`<p class="note">Sin docentes. El código se usa para que ingresen con su rol.</p>`}
+ h+=`</div>`;
+
+ // Cursos
+ const csAll=Object.entries(DB.cursos);
+ if(csAll.length)h+=turnoFilterUI();
+ const cs=aplicarTurno(csAll);
+ if(!csAll.length)h+=`<div class="card"><div class="empty"><div class="e">🏫</div><p>Todavía no hay cursos.</p></div></div>`;
+ else if(!cs.length)h+=`<div class="card"><div class="empty"><div class="e">🕐</div><p>No hay cursos en ese turno.</p></div></div>`;
+ cs.forEach(([id,c])=>{
+  const sc=contarSexo(c);
+  h+=`<div class="card">
+   <h2>${esc(c.nombre)} <span class="pill">${c.turno?esc(c.turno)+' · ':''}${c.tipo==='comun'?'Común':'Técnica'} · ${c.anio}°${c.orient?' · '+esc(c.orient):''}</span></h2>
+   <div style="font-size:13px;color:#4a5568;margin-bottom:10px">♂ <b>${sc.v}</b> varones · ♀ <b>${sc.m}</b> mujeres${sc.x?' · <b>'+sc.x+'</b> otros':''} · 👥 <b>${sc.total}</b> total</div>
+   <label class="lbl">Docentes a cargo</label>
+   <div style="margin-bottom:12px">${Object.entries(DB.docentes).map(([did,d])=>`<label class="chk"><input type="checkbox" ${(c.docentes||[]).includes(did)?'checked':''} onchange="toggleDocCurso('${id}','${did}')"> ${esc(d.nombre)}</label>`).join('')||'<span class="note">Cargá docentes arriba para asignarlos.</span>'}</div>
+   <div class="row" style="margin-bottom:12px">
+     <input class="inp" id="al-${id}" placeholder="Apellido, Nombre — y Enter" style="margin-bottom:0;flex:2" onkeydown="if(event.key==='Enter')addAlumno('${id}')">
+     <select class="inp" id="al-sexo-${id}" style="margin-bottom:0;flex:0 0 auto"><option value="V">♂ Varón</option><option value="M">♀ Mujer</option><option value="X">Otro</option></select>
+     <button class="btn btn-green" style="flex:0 0 auto" onclick="addAlumno('${id}')">+ Alumno</button></div>
+   ${renderAlumnos(id,c)}
+   <div style="text-align:right;margin-top:12px"><button class="btn btn-red" onclick="borrarCurso('${id}')">🗑 Eliminar curso</button></div>
+  </div>`;
+ });
+ $('view').innerHTML=h;onTipoCurso();
+}
+function renderAlumnos(id,c){
+ const al=alumnosOrdenados(c);
+ if(!al.length)return`<p class="note">Sin alumnos.</p>`;
+ let h=`<div class="table-wrap"><table><tr><th>#</th><th>Apellido y nombre</th><th>Sexo</th><th></th></tr>`;
+ al.forEach((a,i)=>{h+=`<tr><td>${i+1}</td><td><span class="ap" style="font-weight:700">${esc(a.apellido)}</span>, ${esc(a.nombre)}</td><td><span class="badge ${a.sexo==='V'?'badge-blue':a.sexo==='M'?'badge-red':'badge-gray'}" style="cursor:pointer" title="Clic para cambiar" onclick="setSexo('${id}','${a.id}')">${sexoLbl(a.sexo)}</span></td><td style="text-align:right"><button class="btn btn-gray" style="padding:4px 9px" onclick="delAlumno('${id}','${a.id}')">✕</button></td></tr>`});
+ return h+`</table></div>`;
+}
+function onTipoCurso(){const t=$('c-tipo');if(!t)return;const anio=$('c-anio');const max=t.value==='tecnica'?7:6;anio.innerHTML='';for(let i=1;i<=max;i++)anio.innerHTML+=`<option value="${i}">${i}°</option>`;onAnioCurso()}
+function onAnioCurso(){
+ const tipo=$('c-tipo').value,anio=+$('c-anio').value,wrap=$('c-orient-wrap'),sel=$('c-orient'),lbl=$('c-orient-lbl');
+ if(anio<=3){wrap.style.display='none';return}
+ wrap.style.display='';
+ if(tipo==='comun'){lbl.textContent='Orientación';sel.innerHTML=Object.keys(MATERIAS_PBA.comun.cicloSuperior.orientaciones).map(o=>`<option>${o}</option>`).join('')}
+ else{lbl.textContent='Especialidad';sel.innerHTML=Object.keys(MATERIAS_PBA.tecnica.especialidades).map(o=>`<option>${o}</option>`).join('')}
+}
+function crearCurso(){
+ const nombre=$('c-nombre').value.trim();if(!nombre){toast('Poné un nombre');return}
+ const tipo=$('c-tipo').value,anio=$('c-anio').value,orient=(+anio>3)?$('c-orient').value:'',turno=$('c-turno').value;
+ DB.cursos[uid('cur')]={nombre,turno,tipo,anio,orient,docentes:[],alumnos:{}};guardar();toast('Curso creado');render();
+}
+function borrarCurso(id){if(!confirm('¿Eliminar el curso y sus datos?'))return;delete DB.cursos[id];delete DB.asistencia[id];rmCursoAsist(id);guardar();render()}
+function addAlumno(id){
+ const inp=$('al-'+id);let v=inp.value.trim();if(!v)return;
+ let apellido=v,nombre='';if(v.includes(',')){const p=v.split(',');apellido=p[0].trim();nombre=p.slice(1).join(',').trim()}
+ const sexo=($('al-sexo-'+id)||{}).value||'V';
+ DB.cursos[id].alumnos[uid('al')]={apellido,nombre,sexo};guardar();inp.value='';render();setTimeout(()=>{const n=$('al-'+id);if(n)n.focus()},40);
+}
+function contarSexo(c){let v=0,m=0,x=0;Object.values(c.alumnos||{}).forEach(a=>{if(a.sexo==='V')v++;else if(a.sexo==='M')m++;else x++});return{v,m,x,total:v+m+x}}
+function sexoLbl(s){return s==='V'?'♂ Varón':s==='M'?'♀ Mujer':'— ?'}
+function setSexo(cid,aid){const a=DB.cursos[cid].alumnos[aid];a.sexo=a.sexo==='V'?'M':a.sexo==='M'?'X':'V';guardar();render()}
+function toggleIntensifica(cid,aid){const mat=resMateria;if(!mat){toast('Elegí una materia primero');return}const c=DB.cursos[cid];c.intensifica=c.intensifica||{};const arr=c.intensifica[aid]||[];const i=arr.indexOf(mat);if(i>=0)arr.splice(i,1);else arr.push(mat);c.intensifica[aid]=arr;guardar();render()}
+function delAlumno(cid,aid){delete DB.cursos[cid].alumnos[aid];guardar();render()}
+function codigoEnUso(code,exceptId){code=code.toUpperCase();
+ if(DB.inst.code.toUpperCase()===code||DB.inst.codes.preceptor.toUpperCase()===code||DB.inst.codes.directivo.toUpperCase()===code)return true;
+ return Object.entries(DB.docentes).some(([id,d])=>id!==exceptId&&d.codigo.toUpperCase()===code);
+}
+function addDocente(){const v=$('d-nombre').value.trim();if(!v)return;
+ let code=$('d-codigo').value.trim().toUpperCase();
+ if(code){if(codigoEnUso(code,null)){toast('Ese código ya está en uso');return}}
+ else{do{code=genCode('DOC')}while(codigoEnUso(code,null))}
+ DB.docentes[uid('doc')]={nombre:v,codigo:code};guardar();$('d-nombre').value='';$('d-codigo').value='';render();
+}
+function editDocCodigo(id){const d=DB.docentes[id];let code=prompt('Código de acceso para '+d.nombre+':',d.codigo);if(code===null)return;code=code.trim().toUpperCase();if(!code){toast('El código no puede quedar vacío');return}if(codigoEnUso(code,id)){toast('Ese código ya está en uso');return}d.codigo=code;guardar();render();toast('Código actualizado')}
+function delDocente(id){if(!confirm('¿Eliminar docente?'))return;delete DB.docentes[id];Object.values(DB.cursos).forEach(c=>{c.docentes=(c.docentes||[]).filter(d=>d!==id)});guardar();render()}
+function toggleDocCurso(cid,did){const c=DB.cursos[cid];c.docentes=c.docentes||[];if(c.docentes.includes(did))c.docentes=c.docentes.filter(d=>d!==did);else c.docentes.push(did);guardar();render()}
+
+/* ====================== VISTA ASISTENCIA ====================== */
+function renderAsist(){
+ const csAll=cursosDeSesion();
+ if(!csAll.length){$('view').innerHTML=`<div class="card"><div class="empty"><div class="e">📋</div><p>${SESSION.rol==='docente'?'No tenés cursos asignados.':'Creá un curso primero (rol Admin).'}</p></div></div>`;return}
+ const cs=aplicarTurno(csAll);
+ let h=turnoFilterUI();
+ if(!cs.length){h+=`<div class="card"><div class="empty"><div class="e">🕐</div><p>No hay cursos en ese turno.</p></div></div>`;$('view').innerHTML=h;return}
+ if(!curCurso||!cs.find(([id])=>id===curCurso))curCurso=cs[0][0];
+ const c=DB.cursos[curCurso];
+ h+=`<div class="tabs">${cs.map(([id,cc])=>`<button class="tab${id===curCurso?' act':''}" onclick="setCursoAsist('${id}')">${esc(cc.nombre)}${cc.turno?' <span style=\"opacity:.6;font-size:10px\">'+esc(cc.turno[0])+'</span>':''}</button>`).join('')}</div>`;
+ h+=`<div class="day-nav"><button class="nav" onclick="moveDay(-1)">◀</button><div class="c"><div class="d">${fmtFecha(curDate)}</div><div class="w">${fmtDow(curDate)}</div></div><button class="nav" onclick="moveDay(1)">▶</button><button class="hoy" onclick="curDate=hoyStr();curReg=null;render()">Hoy</button></div>`;
+
+ // Registros ya tomados ese día
+ const regs=Object.entries((DB.asistencia[curCurso]||{})[curDate]||{});
+ if(regs.length){h+=`<div class="card"><h2>📚 Tomas de este día</h2><div>${regs.map(([rid,r])=>`<span class="reg-chip${rid===curReg?' act':''}" onclick="curReg='${rid}';render()">${esc(r.materia)} · ${r.dia} ${r.hora}</span>`).join('')}</div></div>`}
+
+ // Nueva toma (materia + día + horario libres)
+ const mats=materiasDeCurso(c);
+ h+=`<div class="card"><h2>➕ Tomar asistencia</h2>
+   <div class="row">
+    <div style="flex:2"><label class="lbl">Materia / módulo</label><select class="inp" id="t-mat" onchange="onTMat()">${mats.map(m=>`<option>${esc(m)}</option>`).join('')}<option>${OTRA}</option></select><input class="inp" id="t-otra" placeholder="Escribí la materia" style="display:none"></div>
+    <div><label class="lbl">Día</label><select class="inp" id="t-dia">${DIAS.map(d=>`<option ${d===diaSemana(curDate)?'selected':''}>${d}</option>`).join('')}</select></div>
+   </div>
+   <label class="lbl">Horas que ocupa (marcá una o más)</label>
+   <div style="margin-bottom:12px">${HORAS.map(x=>`<label class="chk"><input type="checkbox" class="t-hora-cb" value="${esc(x)}"> ${esc(x)}</label>`).join('')}</div>
+   <button class="btn btn-blue" onclick="nuevaToma()">Tomar →</button></div>`;
+
+ if(curReg&&regs.find(([rid])=>rid===curReg))h+=renderToma(c,curReg);
+ $('view').innerHTML=h;
+}
+function setCursoAsist(id){curCurso=id;curReg=null;render()}
+function moveDay(n){const d=new Date(curDate+'T12:00');d.setDate(d.getDate()+n);curDate=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());curReg=null;render()}
+function onTMat(){$('t-otra').style.display=$('t-mat').value===OTRA?'':'none'}
+function horasLabel(horas){
+ const ord=horas.slice().sort((a,b)=>HORAS.indexOf(a)-HORAS.indexOf(b));
+ return ord.map(x=>x.replace(' hora','').replace('Contraturno / Taller','Contraturno')).join(', ');
+}
+function nuevaToma(){
+ let materia=$('t-mat').value;if(materia===OTRA){materia=$('t-otra').value.trim();if(!materia){toast('Escribí la materia');return}}
+ const dia=$('t-dia').value;
+ const horas=[...document.querySelectorAll('.t-hora-cb:checked')].map(c=>c.value);
+ if(!horas.length){toast('Marcá al menos una hora');return}
+ const hora=horasLabel(horas);
+ DB.asistencia[curCurso]=DB.asistencia[curCurso]||{};DB.asistencia[curCurso][curDate]=DB.asistencia[curCurso][curDate]||{};
+ const day=DB.asistencia[curCurso][curDate];
+ let rid=Object.keys(day).find(k=>day[k].materia===materia&&day[k].hora===hora&&day[k].dia===dia);
+ if(!rid){rid=uid('reg');day[rid]={materia,dia,horas,hora,est:{},just:{},obs:{},by:SESSION.docNombre||SESSION.rol}}
+ curReg=rid;wReg(curCurso,curDate,rid);render();
+}
+function renderToma(c,rid){
+ const r=DB.asistencia[curCurso][curDate][rid];
+ const al=alumnosOrdenados(c);
+ let p=0,t=0,a=0;al.forEach(x=>{const v=r.est[x.id];if(v==='P')p++;else if(v==='T')t++;else if(v==='A')a++});
+ const sin=al.length-p-t-a;
+ let h=`<div class="card"><h2>📋 ${esc(r.materia)} <span class="pill">${r.dia} · ${r.hora}</span></h2>
+  <div class="ctr"><div class="i"><div class="v vg">${p}</div><div class="l">Presentes</div></div><div class="i"><div class="v vy">${t}</div><div class="l">Tardes</div></div><div class="i"><div class="v vr">${a}</div><div class="l">Ausentes</div></div><div class="i"><div class="v vb">${sin}</div><div class="l">Sin marcar</div></div></div>`;
+ if(!al.length){h+=`<div class="empty"><div class="e">👥</div><p>Este curso no tiene alumnos.</p></div></div>`;return h}
+ al.forEach(x=>{
+  const v=r.est[x.id]||'';const isJ=!!r.just[x.id];
+  const cls=v==='P'?'togP':v==='T'?'togT':v==='A'?(isJ?'togAJ':'togA'):'togE';
+  h+=`<div class="att-row"><div class="att-name"><span class="ap">${esc(x.apellido)}</span>, ${esc(x.nombre)}</div>
+    <button class="tog ${cls}" onclick="togAtt('${rid}','${x.id}')">${v||'·'}</button>
+    ${v==='A'?`<button class="just ${isJ?'':'off'}" onclick="togJust('${rid}','${x.id}')">${isJ?'✓ Justif.':'Justificar'}</button>`:''}
+    <input class="obs" placeholder="Observación..." value="${esc(r.obs[x.id]||'')}" onchange="setObs('${rid}','${x.id}',this.value)"></div>`;
+ });
+ h+=`<p class="note">Tocá para rotar: · → P → T → A → vacío. En "A" aparece Justificar (queda AJ). Registrado por: ${esc(r.by||'—')}</p>
+   <div style="text-align:right;margin-top:8px"><button class="btn btn-red" onclick="delReg('${rid}')">🗑 Eliminar esta toma</button></div></div>`;
+ return h;
+}
+function togAtt(rid,aid){const r=DB.asistencia[curCurso][curDate][rid];const cur=r.est[aid]||'';const nxt=cur===''?'P':cur==='P'?'T':cur==='T'?'A':'';if(nxt)r.est[aid]=nxt;else delete r.est[aid];if(nxt!=='A')delete r.just[aid];wReg(curCurso,curDate,rid);render()}
+function togJust(rid,aid){const r=DB.asistencia[curCurso][curDate][rid];r.just[aid]=!r.just[aid];wReg(curCurso,curDate,rid);render()}
+function setObs(rid,aid,v){const r=DB.asistencia[curCurso][curDate][rid];if(v.trim())r.obs[aid]=v;else delete r.obs[aid];wReg(curCurso,curDate,rid)}
+function delReg(rid){if(!confirm('¿Eliminar esta toma?'))return;delete DB.asistencia[curCurso][curDate][rid];curReg=null;rmReg(curCurso,curDate,rid);render()}
+
+/* ====================== VISTA RESUMEN ====================== */
+function renderResumen(){
+ const csAll=cursosDeSesion();
+ if(!csAll.length){$('view').innerHTML=`<div class="card"><div class="empty"><div class="e">📊</div><p>Sin cursos.</p></div></div>`;return}
+ const cs=aplicarTurno(csAll);
+ let h=turnoFilterUI();
+ if(!cs.length){h+=`<div class="card"><div class="empty"><div class="e">🕐</div><p>No hay cursos en ese turno.</p></div></div>`;$('view').innerHTML=h;return}
+ if(!resCurso||!cs.find(([id])=>id===resCurso))resCurso=cs[0][0];
+ const c=DB.cursos[resCurso];
+ const att=DB.asistencia[resCurso]||{};
+ // materias presentes en los registros
+ const matSet=new Set();Object.values(att).forEach(day=>Object.values(day).forEach(r=>matSet.add(r.materia)));
+ const matList=[...matSet].sort((a,b)=>a.localeCompare(b,'es'));
+ h+=`<div class="tabs">${cs.map(([id,cc])=>`<button class="tab${id===resCurso?' act':''}" onclick="resCurso='${id}';resMateria=null;render()">${esc(cc.nombre)}${cc.turno?' <span style=\"opacity:.6;font-size:10px\">'+esc(cc.turno[0])+'</span>':''}</button>`).join('')}</div>`;
+ h+=`<div class="card"><label class="lbl">Materia</label><select class="inp" style="margin-bottom:0" onchange="resMateria=this.value;render()"><option value="">— Todas (consolidado) —</option>${matList.map(m=>`<option ${m===resMateria?'selected':''}>${esc(m)}</option>`).join('')}</select></div>`;
+
+ const al=alumnosOrdenados(c);
+ if(!al.length){h+=`<div class="card"><div class="empty"><div class="e">👥</div><p>Sin alumnos.</p></div></div>`;$('view').innerHTML=h;return}
+ const filt=resMateria||null;
+ function stats(aid){
+  let p=0,t=0,a=0,aj=0,clases=0;
+  Object.values(att).forEach(day=>Object.values(day).forEach(r=>{
+   if(filt&&r.materia!==filt)return;const v=r.est[aid];if(v===undefined)return;clases++;
+   if(v==='P')p++;else if(v==='T')t++;else if(v==='A'){if(r.just[aid])aj++;else a++}
+  }));
+  const pct=clases>0?Math.round((p+t)/clases*100):null;return{p,t,a,aj,clases,pct};
+ }
+ let totalClases=0;Object.values(att).forEach(day=>Object.values(day).forEach(r=>{if(filt&&r.materia!==filt)return;if(Object.keys(r.est).length)totalClases++}));
+
+ const sc=contarSexo(c);
+ const filas=al.map(x=>({x,s:stats(x.id)}));
+ let totP=0,totT=0,totA=0,totAJ=0,totPos=0;const pcts=[];
+ filas.forEach(({s})=>{totP+=s.p;totT+=s.t;totA+=s.a;totAJ+=s.aj;totPos+=s.clases;if(s.pct!==null)pcts.push(s.pct)});
+ const asistTot=totP+totT,inasistTot=totA+totAJ;
+ const pctAsist=totPos>0?asistTot/totPos*100:null;
+ const pctInasist=totPos>0?inasistTot/totPos*100:null;
+ const pctMedia=pcts.length?pcts.reduce((a,b)=>a+b,0)/pcts.length:null;
+ const fmtP=v=>v===null?'—':v.toFixed(1).replace('.',',')+'%';
+ const colP=v=>v===null?'#718096':v>=75?'#276749':'#9b2c2c';
+ c.intensifica=c.intensifica||{};
+ function intensAutoDe(aid){const out=[];matList.forEach(mat=>{let pt=0,cl=0;Object.values(att).forEach(day=>Object.values(day).forEach(r=>{if(r.materia!==mat)return;const v=r.est[aid];if(v===undefined)return;cl++;if(v==='P'||v==='T')pt++}));if(cl>0&&(pt/cl*100)<75)out.push(mat)});return out}
+ function intensDe(aid){return[...new Set([...(intensAutoDe(aid)),...((c.intensifica[aid]||[]))])].sort((a,b)=>a.localeCompare(b,'es'))}
+ let nIntens=0;filas.forEach(({x})=>{if(intensDe(x.id).length)nIntens++});
+ h+=`<div class="card"><div class="stat-grid">
+   <div class="stat"><div class="v" style="color:#2b6cb0">${sc.v}</div><div class="l">♂ Varones</div></div>
+   <div class="stat"><div class="v" style="color:#9b2c2c">${sc.m}</div><div class="l">♀ Mujeres</div></div>
+   <div class="stat"><div class="v" style="color:#1a365d">${sc.total}</div><div class="l">👥 Total</div></div>
+   <div class="stat"><div class="v" style="color:#2b6cb0">${filt?1:matList.length}</div><div class="l">${filt?'Materia':'Materias'}</div></div>
+   <div class="stat"><div class="v" style="color:#276749">${totalClases}</div><div class="l">Clases reg.</div></div></div>
+  <div class="stat-grid">
+   <div class="stat"><div class="v" style="color:#276749">${asistTot}</div><div class="l">Asistencias (P+T)</div></div>
+   <div class="stat"><div class="v" style="color:#9b2c2c">${inasistTot}</div><div class="l">Inasistencias (A+AJ)</div></div>
+   <div class="stat"><div class="v" style="color:${colP(pctAsist)}">${fmtP(pctAsist)}</div><div class="l">% Asistencia</div></div>
+   <div class="stat"><div class="v" style="color:#9b2c2c">${fmtP(pctInasist)}</div><div class="l">% Inasistencia</div></div>
+   <div class="stat"><div class="v" style="color:${colP(pctMedia)}">${fmtP(pctMedia)}</div><div class="l">% Asist. media</div></div>
+   <div class="stat"><div class="v" style="color:#9b2c2c">${nIntens}</div><div class="l">⚠ Deben intensificar</div></div></div>
+  <div class="table-wrap"><table><tr><th>Alumno</th><th>P</th><th>T</th><th>AJ</th><th>A</th><th>Clases</th><th>% Asist.</th><th>Intensifica</th></tr>`;
+ filas.forEach(({x,s})=>{const col=s.pct===null?'#718096':s.pct>=75?'#276749':'#9b2c2c';
+  const intl=intensDe(x.id);const marcadaManual=(c.intensifica[x.id]||[]).includes(filt);
+  const intCell=`${intl.length?`<span class="badge badge-red" title="${esc(intl.join(', '))}">⚠ ${intl.length}</span>`:'<span class="badge badge-gray">—</span>'}${filt?` <button class="btn btn-gray" style="padding:2px 7px;font-size:10px;margin-left:4px" onclick="toggleIntensifica('${resCurso}','${x.id}')">${marcadaManual?'Quitar':'Marcar'}</button>`:''}`;
+  h+=`<tr><td><span class="ap" style="font-weight:700">${esc(x.apellido)}</span>, ${esc(x.nombre)}</td><td style="text-align:center;color:#276749;font-weight:700">${s.p}</td><td style="text-align:center;color:#744210;font-weight:700">${s.t}</td><td style="text-align:center;color:#2b6cb0;font-weight:700">${s.aj}</td><td style="text-align:center;color:#9b2c2c;font-weight:700">${s.a}</td><td style="text-align:center">${s.clases}</td><td style="text-align:center;font-weight:800;color:${col}">${s.pct===null?'—':s.pct+'%'}</td><td style="text-align:center">${intCell}</td></tr>`});
+ h+=`<tr><td style="background:#2d3748;color:#fff;font-weight:800">TOTALES</td><td style="background:#2d3748;color:#fff;text-align:center;font-weight:800">${totP}</td><td style="background:#2d3748;color:#fff;text-align:center;font-weight:800">${totT}</td><td style="background:#2d3748;color:#fff;text-align:center;font-weight:800">${totAJ}</td><td style="background:#2d3748;color:#fff;text-align:center;font-weight:800">${totA}</td><td style="background:#2d3748;color:#fff;text-align:center;font-weight:800">${totPos}</td><td style="background:#2d3748;color:#fff;text-align:center;font-weight:800">${fmtP(pctAsist)}</td><td style="background:#2d3748;color:#fff;text-align:center;font-weight:800">${nIntens}</td></tr>`;
+ h+=`</table></div><p class="note">P=Presente · T=Tarde · AJ=Ausente justificado · A=Ausente injustificado. El % cuenta (P+T) sobre las clases registradas${filt?' de esa materia':' de todas las materias'}. <b>En secundaria, la asistencia no debe ser menor al 75%</b> para conservar la regularidad (en rojo los que están por debajo).<br><b>Intensifica:</b> marca automáticamente, por alumno, las materias con menos del 75% (debe intensificarlas). Con una materia seleccionada arriba podés <b>marcar/quitar a mano</b> una intensificación por nota.</p></div>`;
+ $('view').innerHTML=h;
+}
+
+/* ====================== VISTA TRAYECTORIAS (valoraciones TEA/TEP/TED) ====================== */
+function renderTrayectorias(){
+ const csAll=cursosDeSesion();
+ if(!csAll.length){$('view').innerHTML=`<div class="card"><div class="empty"><div class="e">🧭</div><p>${SESSION.rol==='docente'?'No tenés cursos asignados.':'No hay cursos.'}</p></div></div>`;return}
+ const cs=aplicarTurno(csAll);
+ let h=turnoFilterUI();
+ if(!cs.length){h+=`<div class="card"><div class="empty"><div class="e">🕐</div><p>No hay cursos en ese turno.</p></div></div>`;$('view').innerHTML=h;return}
+ if(!trayCurso||!cs.find(([id])=>id===trayCurso))trayCurso=cs[0][0];
+ const c=DB.cursos[trayCurso];
+ h+=`<div class="tabs">${cs.map(([id,cc])=>`<button class="tab${id===trayCurso?' act':''}" onclick="trayCurso='${id}';render()">${esc(cc.nombre)}${cc.turno?' <span style=\"opacity:.6;font-size:10px\">'+esc(cc.turno[0])+'</span>':''}</button>`).join('')}</div>`;
+ const mats=materiasDeCurso(c);
+ if(!trayMateria||!mats.includes(trayMateria))trayMateria=mats[0]||'';
+ if(!trayPeriodo)trayPeriodo=PERIODOS[0];
+ h+=`<div class="card"><div class="row">
+   <div style="flex:2"><label class="lbl">Materia</label><select class="inp" style="margin-bottom:0" onchange="trayMateria=this.value;render()">${mats.map(m=>`<option ${m===trayMateria?'selected':''}>${esc(m)}</option>`).join('')}</select></div>
+   <div><label class="lbl">Período (valoración)</label><select class="inp" style="margin-bottom:0" onchange="trayPeriodo=this.value;render()">${PERIODOS.map(p=>`<option ${p===trayPeriodo?'selected':''}>${esc(p)}</option>`).join('')}</select></div>
+ </div></div>`;
+ const al=alumnosOrdenados(c);
+ if(!al.length){h+=`<div class="card"><div class="empty"><div class="e">👥</div><p>Sin alumnos.</p></div></div>`;$('view').innerHTML=h;return}
+ const editable=SESSION.rol==='docente'||SESSION.rol==='admin';
+ c.trayectorias=c.trayectorias||{};
+ const mapa=((c.trayectorias[trayPeriodo]||{})[trayMateria])||{};
+ // conteo
+ let nTEA=0,nTEP=0,nTED=0,nSin=0;
+ al.forEach(x=>{const v=mapa[x.id];if(v==='TEA')nTEA++;else if(v==='TEP')nTEP++;else if(v==='TED')nTED++;else nSin++});
+ h+=`<div class="card"><div class="stat-grid">
+   <div class="stat"><div class="v" style="color:#276749">${nTEA}</div><div class="l">TEA · Avanzada</div></div>
+   <div class="stat"><div class="v" style="color:#744210">${nTEP}</div><div class="l">TEP · En proceso</div></div>
+   <div class="stat"><div class="v" style="color:#9b2c2c">${nTED}</div><div class="l">TED · Discontinua</div></div>
+   <div class="stat"><div class="v" style="color:#a0aec0">${nSin}</div><div class="l">Sin valorar</div></div></div>`;
+ h+=`<div class="card"><h2>🧭 ${esc(trayMateria)} <span class="pill">${esc(trayPeriodo)}</span></h2>`;
+ al.forEach(x=>{
+  const v=mapa[x.id]||'';
+  let cell;
+  if(editable){
+   cell=Object.keys(TRAY).map(k=>`<button class="btn" style="padding:5px 11px;margin-left:5px;${v===k?`background:${TRAY[k].bg};color:${TRAY[k].c};border:2px solid ${TRAY[k].c}`:'background:#edf2f7;color:#718096;border:2px solid transparent'}" onclick="setTray('${trayCurso}','${x.id}','${k}')">${k}</button>`).join('');
+  }else{
+   cell=v?`<span class="badge" style="background:${TRAY[v].bg};color:${TRAY[v].c}">${v} · ${TRAY[v].n}</span>`:'<span class="badge badge-gray">Sin valorar</span>';
+  }
+  h+=`<div class="att-row"><div class="att-name"><span class="ap">${esc(x.apellido)}</span>, ${esc(x.nombre)}</div><div>${cell}</div></div>`;
+ });
+ h+=`<p class="note" style="padding:8px 4px 0"><b>TEA</b>=Trayectoria Educativa Avanzada · <b>TEP</b>=En Proceso · <b>TED</b>=Discontinua.${editable?' Tocá una opción para valorar; volvé a tocarla para quitarla.':' (Solo lectura — la valoración la cargan los docentes.)'}</p></div>`;
+ $('view').innerHTML=h;
+}
+function setTray(cid,aid,val){
+ const c=DB.cursos[cid];c.trayectorias=c.trayectorias||{};
+ c.trayectorias[trayPeriodo]=c.trayectorias[trayPeriodo]||{};
+ c.trayectorias[trayPeriodo][trayMateria]=c.trayectorias[trayPeriodo][trayMateria]||{};
+ const m=c.trayectorias[trayPeriodo][trayMateria];
+ if(m[aid]===val)delete m[aid];else m[aid]=val;
+ wCurso(cid);render();
+}
+
+/* ====================== VISTA CONFIG (admin) ====================== */
+function renderConfig(){
+ let h=`<div class="card"><h2>🔑 Códigos de acceso</h2>
+   <div class="code-show">🏫 Institución: <b>${DB.inst.code}</b></div>
+   <div class="code-show">📋 Preceptor: <b>${DB.inst.codes.preceptor}</b></div>
+   <div class="code-show">🏫 Directivo: <b>${DB.inst.codes.directivo}</b></div>
+   <h2 style="margin-top:14px">👨‍🏫 Códigos de docentes</h2>
+   ${Object.keys(DB.docentes).length?Object.entries(DB.docentes).map(([id,d])=>`<div class="code-show">👨‍🏫 ${esc(d.nombre)}: <b>${d.codigo}</b></div>`).join(''):'<p class="note">Todavía no hay docentes. Crealos en la pestaña <b>Gestión → Docentes</b> y su código aparecerá acá automáticamente.</p>'}</div>
+  <div class="card"><h2>🔐 Cambiar contraseña de admin</h2>
+   <label class="lbl">Nueva contraseña</label><input class="inp" id="np1" type="password" placeholder="Mínimo 6">
+   <label class="lbl">Repetir</label><input class="inp" id="np2" type="password">
+   <button class="btn btn-blue" onclick="cambiarPass()">Guardar</button></div>
+  <div class="card"><h2>⚠️ Datos</h2><p class="note" style="margin-bottom:10px">Esto borra TODO en este navegador (institución, cursos, asistencia).</p>
+   <button class="btn btn-red" onclick="resetTodo()">🗑 Borrar todo y empezar de cero</button></div>`;
+ $('view').innerHTML=h;
+}
+function cambiarPass(){const a=$('np1').value.trim(),b=$('np2').value.trim();if(a.length<6){toast('Mínimo 6 caracteres');return}if(a!==b){toast('No coinciden');return}DB.inst.adminPass=a;guardar();toast('Contraseña actualizada')}
+function resetTodo(){if(!confirm('¿Borrar TODO?'))return;if(RT)dref('').remove();DB=seed();SESSION=null;localStorage.removeItem('AR_SEC_SESS');location.reload()}
+
+/* ====================== INIT + SINCRONIZACIÓN EN TIEMPO REAL ====================== */
+let _firstSnap=true;
+if(RT){
+ dref('').on('value',snap=>{
+  DB=normalize(snap.val());
+  if(_firstSnap){
+   _firstSnap=false;
+   if(DB.inst&&$('i-inst'))$('i-inst').value=DB.inst.code;
+   if(SESSION&&DB.inst)mostrarApp();
+  }else if($('app').classList.contains('on')){
+   if(DB.inst)$('hdr-inst').textContent=DB.inst.nombre+' · Ciclo '+DB.inst.ciclo;
+   render();
+  }
+ });
+}else{
+ alert('No se pudo conectar con Firebase. Revisá tu conexión a internet y volvé a abrir la página.');
+}
+</script>
+</body>
+</html>
